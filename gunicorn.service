@@ -1,0 +1,17 @@
+[Unit]
+Description=gunicorn daemon
+Requires=gunicorn.socket
+After=network.target
+
+[Service]
+User=administrator
+Group=administrator
+WorkingDirectory=/home/administrator/demos-local/src/
+ExecStart=/home/administrator/demos-local/src/.venv/bin/gunicorn \
+          --access-logfile - \
+          --workers 3 \
+          --bind unix:/run/gunicorn.sock \
+          demos.wsgi:application
+
+[Install]
+WantedBy=multi-user.target

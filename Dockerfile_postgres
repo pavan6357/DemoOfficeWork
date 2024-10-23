@@ -1,0 +1,48 @@
+FROM ubuntu:bionic-20200403 AS add-apt-repositories
+
+LABEL maintainer="vijaya@theretailinsights.com"
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libicu-dev \
+    libzip-dev \
+    libpng-dev \
+    libfreetype6-dev \
+    libonig-dev \
+    locales \
+    zip \
+    unzip \
+    jpegoptim optipng pngquant gifsicle \
+    curl \
+    wget \
+    nano 
+RUN apt update &&  apt -y install gnupg2 \
+     wget ca-certificates 
+RUN  wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
+    && echo "deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main" >> /etc/apt/sources.list
+
+ENV TZ=Asia/Kolkata \
+    DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install tzdata
+
+RUN apt update && apt -fy install gcc software-properties-common \
+    postgresql-14 postgresql-client-14 postgresql-contrib-14
+
+USER postgres
+
+COPY ./src/demos.sql /home
+COPY db_custom_init.sh /home
+
+RUN echo "host all  all    0.0.0.0/0  md5" >> /etc/postgresql/14/main/pg_hba.conf
+
+RUN echo "listen_addresses='*'" >> /etc/postgresql/14/main/postgresql.conf
+
+VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
+
+CMD ["/usr/lib/postgresql/14/bin/postgres", "-D", "/var/lib/postgresql/14/main", "-c", "config_file=/etc/postgresql/14/main/postgresql.conf"]
+
+# ENTRYPOINT [ "/home/db_custom_init.sh" ]
+
+EXPOSE 5432

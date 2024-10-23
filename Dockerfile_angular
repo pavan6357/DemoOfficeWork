@@ -1,0 +1,23 @@
+FROM node:12.22.9 AS build
+# Set working directory
+WORKDIR /usr/local/demos_frontend/
+# Copy all files from current directory to working dir in image
+COPY ./front_end/ .
+# install node modules and build assets
+RUN npm i 
+# && npm run build
+RUN npm install -g @angular/cli@13.3.5
+# Generate the build of the application
+RUN ng build 
+
+FROM nginx:alpine
+#!/bin/sh
+COPY ./nginx.conf /etc/nginx/nginx.conf
+## Remove default nginx index page
+RUN rm -rf /usr/share/nginx/html/*
+
+COPY --from=build /usr/local/demos_frontend/dist/retail-demo/ /usr/share/nginx/html
+
+EXPOSE 3000 80
+
+ENTRYPOINT ["nginx", "-g", "daemon off;"]
